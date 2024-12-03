@@ -1,0 +1,118 @@
+spring:
+  application:
+    name: CCaaS-module-Sym
+  ccaas:
+    datasource:
+      hikari :
+        jdbc-url: jdbc:log4jdbc:mariadb://10.0.25.125:3306/ccaas?allowMultiQueries=true
+        username: admin
+        password: Rhksflwk!1
+        driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+        connection-timeout: 30000 # 30?
+        idle-timeout: 600000 # 10?
+        max-lifetime: 1800000 # 30?
+  ecp:
+    datasource:
+      hikari:
+        jdbc-url: jdbc:log4jdbc:mariadb://10.0.25.125:3307/ecp?allowMultiQueries=true
+        username: ecp
+        password: Rhksflwk!1
+        driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+        connection-timeout: 30000 # 30?
+        idle-timeout: 600000 # 10?
+        max-lifetime: 1800000 # 30?
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  data:
+    mongodb:
+      #uri : mongodb://username:password@host:port/database
+      uri: mongodb://10.0.25.125:27017/REALTIME
+
+mybatis:
+  mapper-locations: classpath:mappers/**/*.xml
+  type-aliases-package: com.ecstel.sym.mapper.ecp
+
+nice:
+  global-production-url: 'https://cxone.niceincontact.com'
+  url :
+    U_SERVICE : /incontactapi/services/v30.0/skills
+    U_ACW : /incontactapi/services/v31.0/dispositions
+    U_AGENT : /incontactapi/services/v31.0/agents
+    U_NRSN : /incontactapi/services/v31.0/unavailable-codes
+    U_POC : /incontactapi/services/v31.0/points-of-contact
+    R_SERVICE : /incontactapi/services/v31.0/skills/summary
+    R_AGENT : /incontactapi/services/v28.0/agents/states
+    U_CAMPAIGNS : /incontactapi/services/v30.0/campaigns
+    E_CONTACT : /incontactapi/services/v31.0/contacts
+    E_AGENT_STATUS : /incontactapi/services/v31.0/agents/state-history
+    ECP_AGENT_SERVICE_MAP : /incontactapi/services/v31.0/agents/skills?isSkillActive=true&isAgentActive=true&isActive=true
+sym:
+  company-code: NICE
+  batchlist:
+    U_SERVICE : true
+    U_CAMPAIGNS : true
+    U_ACW : true
+    U_AGENT : true
+    U_NRSN : true
+    U_POC : true
+    C_INBOUND : true
+    C_OUTBOUND : true
+    C_CAMPAIGN : true
+    E_AGENT_STATUS: true
+    E_CONTACT : true
+    STAT_H_SERVICE : true
+    R_SERVICE : true
+    R_AGENT : true
+    AGT_SERVICE_MAP : true
+    R_CAMPAIGN : true
+
+  job:
+    infoSchedule: 0 0/15 * * * ?
+    #infoSchedule: '*/10 * * * * ?'
+    statSchedule: ''
+    #statSchedule: '*/10 * * * * ?'
+    #evtSchedule: '*/10 * * * * ?'
+    evtSchedule: 0 0/1 * * * ?
+    #evtSchedule: '*/10 * * * * ?'
+    realSchedule: '*/5 * * * * ?'
+    #daliySchedule: 0 0 1 * * ?
+    #dailySchedule: '*/30 * * * * ?'
+    dailySchedule: 0 0/15 * * * ?
+  stat:
+    iflag : true
+    i30flag : true
+    hflag : true
+    dflag : true
+    mflag : true
+
+server:
+  port: 9011
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+logging:
+  level:
+    org.apache.http.client.protocol.ResponseProcessCookies: OFF
+    log4jdbc:
+      log4j2: ERROR  # log4jdbc? ?? ?? ??? DEBUG? ??
+    com:
+      zaxxer:
+        hikari: DEBUG  # HikariCP? ?? ??? DEBUG? ??
+    jdbc:
+      sqlonly: DEBUG        # SQL ?? ?? ??
+      sqltiming: DEBUG      # SQL ?? ?? ?? ??
+      resultsettable: DEBUG  # ResultSet ??? ??
+      audit: DEBUG          # ?? ?? ??
+      resultset: DEBUG      # ResultSet ?? ??
+      connection: DEBUG      # ?????? ?? ?? ?? ??
+    org:
+      mybatis:
+        SQL: DEBUG          # MyBatis SQL ?? ?? ??
+        jdbc: ERROR         # MyBatis JDBC ?? ??? ERROR? ??
+
+

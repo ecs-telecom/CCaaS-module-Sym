@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ecstel.sym.mapper.ecp.EcpDbMapper">
+
+    <select id="selectCompanyInfo" parameterType="com.ecstel.sym.utils.DataMap"
+            resultType="com.ecstel.sym.utils.DataMap">
+        select
+            ec.id as COMPANY_ID ,eccc.CONTACT_CENTER_TYPE as CONTACT_CENTER_TYPE ,eccc.CC_TENANT_URL as CC_TENANT_URL ,eccc.CC_TENANT_ID as CC_TENANT_ID ,eccc.GRANT_TYPE  as GRANT_TYPE,eccc.CLIENT_ID as CLIENT_ID,eccc.CLIENT_SECRET   as CLIENT_SECRET,eccc.database_schema   as database_schema
+        from
+            ecp_contact_center_conf eccc, ecp_company ec
+        where
+            ec.CODE = #{companyCode}
+          and ec.CONTACT_CENTER_CONF_ID  = eccc.id;
+    </select>
+
+
+
+
+
+    <insert id="updateEcpAgent" parameterType="com.ecstel.sym.utils.DataMap">
+        <foreach collection="list" item="item" separator=";">
+            <choose>
+                <when test="item.isExists == 1">
+                    UPDATE ECP.ECP_AGENT
+                    SET CC_CTI_IS_DISABLED = #{item.isActive}
+                    ,CC_VOICE_CH_CNT = #{item.voiceThreshold}
+                    ,CC_CHAT_CH_CNT = #{item.agentChatThreshold}
+                    ,CC_DIGITAL_CH_CNT = #{item.digitalthreshold}
+                    ,CC_EMAIL_CH_CNT = #{item.agentEmailThreshold}
+                    ,CC_WORK_ITEM_CH_CNT = #{item.agentWorkItemThreshold}
+                    ,CC_TOTAL_CONTACT_CH_CNT = #{item.agentTotalContactCount}
+                    ,LAST_BATCHED_AT = now()
+                    WHERE CC_CTI_ID = #{item.agentId} and COMPANY_ID = #{item.companyId}
+                </when>
+                <otherwise>
+                    INSERT INTO ECP.ECP_AGENT (
+                    CC_CTI_ID,
+                    COMPANY_ID,
+                    TENANT_ID,
+                    NAME,
+                    CC_LOGIN_ID,
+                    CC_NAME,
+                    CC_EMAIL,
+                    CC_EXTENSION,
+                    CC_VOICE_CH_CNT,
+                    CC_CHAT_CH_CNT,
+                    CC_DIGITAL_CH_CNT,
+                    CC_EMAIL_CH_CNT,
+                    CC_WORK_ITEM_CH_CNT,
+                    CC_TOTAL_CONTACT_CH_CNT,
+                    CC_CTI_IS_DISABLED,
+                    LAST_BATCHED_AT
+                    ) VALUES (#{item.agentId}, #{item.companyId}, (select min(id) from ecp.ecp_tenant where company_id = #{item.companyId}),#{item.agentName}, #{item.userName}, #{item.agentName}, #{item.emailAddress}, '', #{item.voiceThreshold}, #{item.item.agentChatThreshold},
+                    #{item.digitalthreshold}, #{item.agentEmailThreshold}, #{item.agentWorkItemThreshold}, #{item.agentTotalContactCount}, #{item.isActive},NOW())
+                </otherwise>
+            </choose>
+        </foreach>
+    </insert>
+
+
+
+</mapper>

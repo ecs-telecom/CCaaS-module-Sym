@@ -1,0 +1,2071 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ecstel.sym.mapper.ccaas.CCaaSDbMapper">
+
+    <select id="setlectUserviceData" parameterType="com.ecstel.sym.utils.DataMap" resultType="com.ecstel.sym.utils.DataMap">
+        select company_id,tenant_id,type,direction,cti_code,cti_code_name,label from u_service where company_id =#{companyId}
+    </select>
+
+    <select id="ExistsTableContact" parameterType="com.ecstel.sym.utils.DataMap"
+            resultType="com.ecstel.sym.utils.DataMap">
+        SELECT COUNT(*) as cnt
+        FROM INFORMATION_SCHEMA.TABLES
+        WHERE TABLE_SCHEMA = 'ccaas'
+          AND TABLE_NAME = 'e_contact';
+    </select>
+
+    <select id="ExistsTablePartition" parameterType="com.ecstel.sym.utils.DataMap"
+            resultType="com.ecstel.sym.utils.DataMap">
+        SELECT COUNT(*) as cnt
+        FROM INFORMATION_SCHEMA.PARTITIONS
+        WHERE TABLE_SCHEMA = #{schema}
+          AND TABLE_NAME = #{tableName}
+          and PARTITION_NAME = #{partitionName}
+    </select>
+
+    <update id="AlterTablePartition" parameterType="com.ecstel.sym.utils.DataMap">
+        ALTER TABLE ${schema}.${tableName}
+            PARTITION BY RANGE COLUMNS(YMD) (
+            PARTITION ${partitionName} VALUES LESS THAN (#{partitionName}),
+            PARTITION p_future VALUES LESS THAN (MAXVALUE)
+            );
+    </update>
+
+
+    <update id="insertStatHAgtInboundData" parameterType="com.ecstel.sym.utils.DataMap">
+        <foreach collection="list" item="item" separator=";">
+        UPDATE STAT_H_AGT_I SET
+             offer = #{item.offer}
+             ,ans = #{item.ans}
+            ,abd = #{item.abd}
+        ,TALKTIME_IN = #{item.talktime}
+        ,ACWTIME_IN = #{item.acwtime}
+        ,RINGTIME = #{item.ringtime}
+        ,holdtime_in = #{item.holdtime}
+        where company_id = #{item.companyId}
+        and timestamp = #{item.timestamp}
+        and tenant_id = #{item.tenantId}
+        and center_id = #{item.centerId}
+        and team_id = #{item.teamId}
+        and part_id = #{item.partId}
+        and agtid = #{item.agtid}
+        </foreach>
+    </update>
+
+    <update id="insertStatHAgtOutboundData" parameterType="com.ecstel.sym.utils.DataMap">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE STAT_H_AGT_I SET
+            obtry = #{item.obtry}
+            ,obconn = #{item.ans}
+            ,TALKTIME_OUT = #{item.talktime}
+            ,HOLDTIME_OUT = #{item.holdtime}
+            where company_id = #{item.companyId}
+            and timestamp = #{item.timestamp}
+            and tenant_id = #{item.tenantId}
+            and center_id = #{item.centerId}
+            and team_id = #{item.teamId}
+            and part_id = #{item.partId}
+            and agtid = #{item.agtid}
+        </foreach>
+    </update>
+
+
+
+
+    <select id="test" parameterType="com.ecstel.sym.utils.DataMap"
+            resultType="com.ecstel.sym.utils.DataMap">
+        select count(*) from c_inbound ci
+    </select>
+
+    <select id="selectEcontactMaxData" parameterType="com.ecstel.sym.utils.DataMap"
+            resultType="com.ecstel.sym.utils.DataMap">
+        SELECT
+            DATE_FORMAT(DATE_SUB(max(LASTUPDATETIME), INTERVAL 9 HOUR), '%Y-%m-%dT%H:%i:%s.000Z') AS formatted_datetime,
+            DATE_FORMAT(DATE_SUB(max(LASTUPDATETIME), INTERVAL 0 HOUR), '%Y-%m-%d %H:%i:%s.000') AS last_datetime
+        FROM
+            e_contact
+        WHERE COMPANY_ID = #{companyId}
+          AND YMD = #{ymd}
+          and DATECONTACTWAREHOUSED != ''
+    </select>
+
+    <select id="selectStatHServiceMaxData" parameterType="com.ecstel.sym.utils.DataMap"
+            resultType="com.ecstel.sym.utils.DataMap">
+        SELECT
+            DATE_FORMAT(DATE_SUB(max(TIMESTAMP), INTERVAL 0 HOUR), '%Y-%m-%d %H:%i:%s.000') AS last_datetime
+        FROM
+            stat_h_ibg_i
+        WHERE COMPANY_ID = #{companyId}
+          AND YMD = #{ymd}
+    </select>
+
+    <select id="selectStatHAgtMaxData" parameterType="com.ecstel.sym.utils.DataMap"
+            resultType="com.ecstel.sym.utils.DataMap">
+        SELECT
+            DATE_FORMAT(DATE_SUB(max(TIMESTAMP), INTERVAL -2 HOUR), '%Y-%m-%d %H:%i:%s.000') AS last_datetime
+        FROM
+            stat_h_agt_i
+        WHERE COMPANY_ID = #{companyId}
+          AND YMD = #{ymd}
+    </select>
+
+    <select id="selectStatHAgtinboundMaxData" parameterType="com.ecstel.sym.utils.DataMap"
+            resultType="com.ecstel.sym.utils.DataMap">
+        SELECT
+            DATE_FORMAT(DATE_SUB(max(TIMESTAMP), INTERVAL -2 HOUR), '%Y-%m-%d %H:%i:%s.000') AS last_datetime
+        FROM
+            stat_h_agt_inbound
+        WHERE COMPANY_ID = #{companyId}
+          AND YMD = #{ymd}
+    </select>
+
+    <select id="selectStatHAgtOutboundMaxData" parameterType="com.ecstel.sym.utils.DataMap"
+            resultType="com.ecstel.sym.utils.DataMap">
+        SELECT
+            DATE_FORMAT(DATE_SUB(max(TIMESTAMP), INTERVAL 0 HOUR), '%Y-%m-%d %H:%i:%s.000') AS last_datetime
+        FROM
+            stat_h_agt_outbound
+        WHERE COMPANY_ID = #{companyId}
+          AND YMD = #{ymd}
+    </select>
+
+
+    <select id="selectStatHAgentStateMaxData" parameterType="com.ecstel.sym.utils.DataMap"
+            resultType="com.ecstel.sym.utils.DataMap">
+        SELECT
+            DATE_FORMAT(DATE_SUB(max(TIMESTAMP), INTERVAL -2 HOUR), '%Y-%m-%d %H:%i:%s.000') AS last_datetime
+        FROM
+            STAT_H_AGT_STATE_I
+        WHERE COMPANY_ID = #{companyId}
+          AND YMD = #{ymd}
+    </select>
+
+
+
+    <select id="selectCInboundMaxData" parameterType="com.ecstel.sym.utils.DataMap"
+            resultType="com.ecstel.sym.utils.DataMap">
+        SELECT
+            DATE_FORMAT(DATE_SUB(max(LAST_UPDATE_TIME), INTERVAL 0 HOUR), '%Y-%m-%d %H:%i:%s.000') AS formatted_datetime,
+            DATE_FORMAT(DATE_SUB(max(LAST_UPDATE_TIME), INTERVAL 0 HOUR), '%Y-%m-%d %H:%i:%s.000') AS last_datetime
+        FROM
+            C_INBOUND
+        WHERE COMPANY_ID = #{companyId}
+          AND YMD = #{ymd}
+          and DATECONTACTWAREHOUSED != ''
+    </select>
+
+    <select id="selectCCampaignMaxData" parameterType="com.ecstel.sym.utils.DataMap"
+            resultType="com.ecstel.sym.utils.DataMap">
+        SELECT
+            DATE_FORMAT(DATE_SUB(max(LAST_UPDATE_TIME), INTERVAL 0 HOUR), '%Y-%m-%d %H:%i:%s.000') AS formatted_datetime,
+            DATE_FORMAT(DATE_SUB(max(LAST_UPDATE_TIME), INTERVAL 0 HOUR), '%Y-%m-%d %H:%i:%s.000') AS last_datetime
+        FROM
+            c_campaign
+        WHERE COMPANY_ID = #{companyId}
+          AND YMD = #{ymd}
+          and DATECONTACTWAREHOUSED != '1970-01-01 09:00:00.000000'
+    </select>
+
+
+    <select id="selectCOutboundMaxData" parameterType="com.ecstel.sym.utils.DataMap"
+            resultType="com.ecstel.sym.utils.DataMap">
+        SELECT
+            DATE_FORMAT(DATE_SUB(max(LAST_UPDATE_TIME), INTERVAL 0 HOUR), '%Y-%m-%d %H:%i:%s.000') AS formatted_datetime,
+            DATE_FORMAT(DATE_SUB(max(LAST_UPDATE_TIME), INTERVAL 0 HOUR), '%Y-%m-%d %H:%i:%s.000') AS last_datetime
+        FROM
+            C_OUTBOUND
+        WHERE COMPANY_ID = #{companyId}
+          AND YMD = #{ymd}
+          and DATECONTACTWAREHOUSED != '1970-01-01 09:00:00.000000'
+    </select>
+
+    <delete id="deleteEAgentState" parameterType="com.ecstel.sym.utils.DataMap">
+        DELETE FROM e_agt_state WHERE COMPANY_ID = #{companyId} AND  YMD = #{ymd};
+    </delete>
+
+    <delete id="deleteEcontactData" parameterType="com.ecstel.sym.utils.DataMap">
+        DELETE FROM E_CONTACT WHERE COMPANY_ID = #{companyId} AND (LASTUPDATETIME > #{lastDateTime} or DATECONTACTWAREHOUSED = '' ) AND YMD = DATE_FORMAT(#{lastDateTime}, '%Y%m%d')
+    </delete>
+
+    <delete id="deleteCInboundData" parameterType="com.ecstel.sym.utils.DataMap">
+        DELETE FROM C_INBOUND
+        WHERE COMPANY_ID = #{companyId}
+          AND (LAST_UPDATE_TIME > #{lastDateTime}  or DATECONTACTWAREHOUSED = '')
+          AND YMD = DATE_FORMAT( #{lastDateTime}, '%Y%m%d')
+    </delete>
+
+    <delete id="deleteCOutboundData" parameterType="com.ecstel.sym.utils.DataMap">
+        DELETE FROM C_OUTBOUND
+        WHERE COMPANY_ID = #{companyId}
+          AND (LAST_UPDATE_TIME > #{lastDateTime}  or DATECONTACTWAREHOUSED = '')
+          AND YMD = DATE_FORMAT( #{lastDateTime}, '%Y%m%d')
+    </delete>
+
+    <delete id="deleteCCampaignData" parameterType="com.ecstel.sym.utils.DataMap">
+        DELETE FROM c_campaign
+        WHERE COMPANY_ID = #{companyId}
+          AND (LAST_UPDATE_TIME > #{lastDateTime}  or DATECONTACTWAREHOUSED = '')
+          AND YMD = DATE_FORMAT( #{lastDateTime}, '%Y%m%d')
+    </delete>
+
+
+    <insert id="setBatchCheck" parameterType="com.ecstel.sym.utils.DataMap">
+        insert into u_BATCH_CHECK (company_id,ymd,batch_name,batch_start_time,batch_end_time,status)
+        values (#{companyId},#{ymd},#{batchName},#{batchStartTime},#{batchEndTime},#{status});
+    </insert>
+    <insert id="insertCOutbound" parameterType="com.ecstel.sym.utils.DataMap">
+        INSERT INTO C_OUTBOUND
+        (
+            COMPANY_ID
+        ,TIMESTAMP
+        ,INTERVAL_TIME_ZONE
+        ,LAST_UPDATE_TIME
+        ,YMD
+        ,YYYYMM
+        ,YYYY
+        ,MM
+        ,DD
+        ,HH24
+        ,HH24MI
+        ,WEEK
+        ,HOLI
+        ,TENANT_ID
+        ,CENTER_ID
+        ,TEAM_ID
+        ,PART_ID
+        ,AGENT_ID
+        ,AGENT_NAME
+        ,MEDIA_TYPE_ID
+        ,SCENARIO_ID
+        ,SCENARIO_NAME
+        ,SERVICE_ID
+        ,SERVICE_NAME
+        ,ANI
+        ,DNIS
+        ,DNIS_NAME
+        ,DIALEDNUM
+        ,CONTACT_START_DATE
+        ,CONTACT_END_DATE
+        ,ANS
+        ,ABD
+        ,IVR_TIME
+        ,QUEUE_TIME
+        ,ANS_QUEUE_TIME
+        ,ABD_QUEUE_TIME
+        ,PENDING_TIME
+        ,TALK_TIME
+        ,HOLD_TIME
+        ,ACW_TIME
+        ,RING_TIME
+        ,TOTAL_DURATION
+        ,dateContactWarehoused
+        ,CONTACT_ID
+        ,MASTER_CONTACT_ID
+        ,END_REASON
+        ,DISPOSITION
+        )
+        SELECT
+            COMPANY_ID,
+            TIMESTAMP,
+            formatIntervalTime(TIMESTAMP) AS INTERVAL_TIME_ZONE,
+            LASTUPDATETIME,
+            YMD,
+            YYYYMM,
+            YYYY,
+            MM,
+            DD,
+            HH24,
+            HH24MI,
+            WEEK,
+            HOLI,
+            (SELECT TENANT_ID       FROM ecp.ECP_AGENT      WHERE COMPANY_ID = ec.COMPANY_ID AND CC_CTI_ID = ec.AGENTID) AS TENANT_ID,
+            (SELECT CENTER_ID   FROM ecp.ECP_AGENT      WHERE COMPANY_ID = ec.COMPANY_ID AND CC_CTI_ID = ec.AGENTID) AS CENTER_ID,
+            (SELECT TEAM_ID       FROM ecp.ECP_AGENT      WHERE COMPANY_ID = ec.COMPANY_ID AND CC_CTI_ID = ec.AGENTID) AS TEAM_ID,
+            (SELECT PART_ID       FROM ecp.ECP_AGENT      WHERE COMPANY_ID = ec.COMPANY_ID AND CC_CTI_ID = ec.AGENTID) AS PART_ID,
+            AGENTID AS AGENT_ID,
+            (SELECT NAME      FROM ecp.ECP_AGENT  WHERE COMPANY_ID = ec.COMPANY_ID AND CC_CTI_ID = ec.AGENTID) AS AGENT_NAME,
+            ec.MEDIATYPEID AS MEDIA_TYPE_ID,
+            ec.CAMPAIGNID AS SCENARIO_ID,
+            ec.CAMPAIGNNAME AS SCENARIO_NAME,
+            ec.SKILLID AS SERVICE_ID,
+            (SELECT label      FROM U_SERVICE us      WHERE us.CTI_CODE = ec.SKILLID AND us.COMPANY_ID = ec.COMPANY_ID) AS SERVICE_NAME,
+            ec.FROMADDRESS AS ANI,
+            ec.TOADDRESS AS DNIS,
+            ec.TOADDRESS AS DNIS_NAME,
+            ec.TOADDRESS AS DIALED_NUM,
+            ec.CONTACTSTARTDATE AS CONTACT_START_DATE,
+            DATE_SUB(ec.CONTACTSTARTDATE, INTERVAL FLOOR(ec.TOTALDURATIONSECONDS) SECOND) AS CONTACT_END_DATE,
+            CASE WHEN endreason in ('Agent Hung Up','Contact Hung Up')  THEN 1 ELSE 0 END as ans,
+                        CASE WHEN endreason not in ('Agent Hung Up','Contact Hung Up')  THEN 1 ELSE 0 END as abd,
+                        round(ec.PREQUEUESECONDS) AS IVR_TIME,
+                        round(ec.INQUEUESECONDS-ec.ROUTINGTIME) as QUEUE_TIME,
+                        CASE WHEN ec.ABANDONED = 0  and ec.AGENTSECONDS  > 0 THEN round(ec.INQUEUESECONDS-ec.ROUTINGTIME) ELSE 0 END as ANS_QUEUE_TIME,
+                        CASE WHEN ec.ABANDONED = 1  THEN round(ec.INQUEUESECONDS-ec.ROUTINGTIME) ELSE 0 END as ABD_QUEUE_TIME,
+                        0 AS PENDING_TIME,
+                        round((ec.AGENTSECONDS - ec.CONFERENCESECONDS - ec.HOLDSECONDS)) as TALK_TIME,
+                        round(ec.HOLDSECONDS)  as HOLD_TIME,
+                        round(ec.ACWSECONDS)  as ACW_TIME,
+                        round(ec.ROUTINGTIME) as RING_TIME,
+                        round(ec.TOTALDURATIONSECONDS) as TOTAL_DURATION,
+                        ec.dateContactWarehoused,
+                        ec.CONTACTID,
+                        ec.MASTERCONTACTID,
+                        ec.endreason,
+                        ec.dispositionNotes AS DISPOSITION
+                    from    E_CONTACT ec
+                    where ec.ISOUTBOUND = 1
+                    AND ec.POINTOFCONTACTID != 10
+                    AND ec.COMPANY_ID = #{companyId}
+                    AND ec.YMD = #{ymd}
+                    AND ec.LASTUPDATETIME >  #{lastDateTime}
+                    AND ec.STATENAME = 'EndContact'
+    </insert>
+
+    <insert id="insertCCampaign" parameterType="com.ecstel.sym.utils.DataMap">
+        INSERT INTO c_campaign
+        (
+            COMPANY_ID
+        ,TIMESTAMP
+        ,INTERVAL_TIME_ZONE
+        ,LAST_UPDATE_TIME
+        ,YMD
+        ,YYYYMM
+        ,YYYY
+        ,MM
+        ,DD
+        ,HH24
+        ,HH24MI
+        ,WEEK
+        ,HOLI
+        ,TENANT_ID
+        ,CENTER_ID
+        ,TEAM_ID
+        ,PART_ID
+        ,AGENT_ID
+        ,AGENT_NAME
+        ,MEDIA_TYPE_ID
+        ,SCENARIO_ID
+        ,SCENARIO_NAME
+        ,SERVICE_ID
+        ,SERVICE_NAME
+        ,ANI
+        ,DNIS
+        ,DNIS_NAME
+        ,DIALEDNUM
+        ,CONTACT_START_DATE
+        ,CONTACT_END_DATE
+        ,ANS
+        ,ABD
+        ,IVR_TIME
+        ,QUEUE_TIME
+        ,ANS_QUEUE_TIME
+        ,ABD_QUEUE_TIME
+        ,PENDING_TIME
+        ,TALK_TIME
+        ,HOLD_TIME
+        ,ACW_TIME
+        ,RING_TIME
+        ,TOTAL_DURATION
+        ,dateContactWarehoused
+        ,CONTACT_ID
+        ,MASTER_CONTACT_ID
+        ,END_REASON
+        )
+        SELECT
+            COMPANY_ID,
+            TIMESTAMP,
+            formatIntervalTime(TIMESTAMP) AS INTERVAL_TIME_ZONE,
+            LASTUPDATETIME,
+            YMD,
+            YYYYMM,
+            YYYY,
+            MM,
+            DD,
+            HH24,
+            HH24MI,
+            WEEK,
+            HOLI,
+            (SELECT TENANT_ID       FROM ecp.ECP_AGENT      WHERE COMPANY_ID = ec.COMPANY_ID AND CC_CTI_ID = ec.AGENTID) AS TENANT_ID,
+            (SELECT CENTER_ID   FROM ecp.ECP_AGENT      WHERE COMPANY_ID = ec.COMPANY_ID AND CC_CTI_ID = ec.AGENTID) AS CENTER_ID,
+            (SELECT TEAM_ID       FROM ecp.ECP_AGENT      WHERE COMPANY_ID = ec.COMPANY_ID AND CC_CTI_ID = ec.AGENTID) AS TEAM_ID,
+            (SELECT PART_ID       FROM ecp.ECP_AGENT      WHERE COMPANY_ID = ec.COMPANY_ID AND CC_CTI_ID = ec.AGENTID) AS PART_ID,
+            AGENTID AS AGENT_ID,
+            (SELECT NAME      FROM ecp.ECP_AGENT  WHERE COMPANY_ID = ec.COMPANY_ID AND CC_CTI_ID = ec.AGENTID) AS AGENT_NAME,
+            ec.MEDIATYPEID AS MEDIA_TYPE_ID,
+            ec.CAMPAIGNID AS SCENARIO_ID,
+            ec.CAMPAIGNNAME AS SCENARIO_NAME,
+            ec.SKILLID AS SERVICE_ID,
+            (SELECT label      FROM U_SERVICE us      WHERE us.CTI_CODE = ec.SKILLID AND us.COMPANY_ID = ec.COMPANY_ID) AS SERVICE_NAME,
+            ec.FROMADDRESS AS ANI,
+            ec.TOADDRESS AS DNIS,
+            ec.TOADDRESS AS DNIS_NAME,
+            ec.TOADDRESS AS DIALED_NUM,
+            ec.CONTACTSTARTDATE AS CONTACT_START_DATE,
+            DATE_SUB(ec.CONTACTSTARTDATE, INTERVAL FLOOR(ec.TOTALDURATIONSECONDS) SECOND) AS CONTACT_END_DATE,
+            CASE WHEN endreason in ('Agent Hung Up','Contact Hung Up')  THEN 1 ELSE 0 END as ans,
+            CASE WHEN endreason not in ('Agent Hung Up','Contact Hung Up')  THEN 1 ELSE 0 END as abd,
+            round(ec.PREQUEUESECONDS) AS IVR_TIME,
+            round(ec.INQUEUESECONDS-ec.ROUTINGTIME) as QUEUE_TIME,
+            CASE WHEN ec.ABANDONED = 0  and ec.AGENTSECONDS  > 0 THEN round(ec.INQUEUESECONDS-ec.ROUTINGTIME) ELSE 0 END as ANS_QUEUE_TIME,
+            CASE WHEN ec.ABANDONED = 1  THEN round(ec.INQUEUESECONDS-ec.ROUTINGTIME) ELSE 0 END as ABD_QUEUE_TIME,
+            0 AS PENDING_TIME,
+            round((ec.AGENTSECONDS - ec.CONFERENCESECONDS - ec.HOLDSECONDS)) as TALK_TIME,
+            round(ec.HOLDSECONDS)  as HOLD_TIME,
+            round(ec.ACWSECONDS)  as ACW_TIME,
+            round(ec.ROUTINGTIME) as RING_TIME,
+            round(ec.TOTALDURATIONSECONDS) as TOTAL_DURATION,
+            ec.dateContactWarehoused,
+            ec.CONTACTID,
+            ec.MASTERCONTACTID,
+            ec.endreason
+                    from    E_CONTACT ec
+                    where ec.ISOUTBOUND = 1
+                    AND ec.POINTOFCONTACTID = 10
+                    AND ec.COMPANY_ID = #{companyId}
+        AND ec.YMD = #{ymd}
+        AND ec.LASTUPDATETIME >  #{lastDateTime}
+        AND ec.STATENAME = 'EndContact'
+    </insert>
+
+    <insert id="insertCInbound" parameterType="com.ecstel.sym.utils.DataMap">
+        INSERT INTO C_INBOUND
+        (
+            COMPANY_ID
+        ,TIMESTAMP
+        ,INTERVAL_TIME_ZONE
+        ,LAST_UPDATE_TIME
+        ,YMD
+        ,YYYYMM
+        ,YYYY
+        ,MM
+        ,DD
+        ,HH24
+        ,HH24MI
+        ,WEEK
+        ,HOLI
+        ,TENANT_ID
+        ,CENTER_ID
+        ,TEAM_ID
+        ,PART_ID
+        ,AGENT_ID
+        ,AGENT_NAME
+        ,MEDIA_TYPE_ID
+        ,SCENARIO_ID
+        ,SCENARIO_NAME
+        ,SERVICE_ID
+        ,SERVICE_NAME
+        ,ANI
+        ,DNIS
+        ,DNIS_NAME
+        ,DIALEDNUM
+        ,CONTACT_START_DATE
+        ,CONTACT_END_DATE
+        ,ANS
+        ,ABD
+        ,IVR_TIME
+        ,QUEUE_TIME
+        ,ANS_QUEUE_TIME
+        ,ABD_QUEUE_TIME
+        ,PENDING_TIME
+        ,TALK_TIME
+        ,HOLD_TIME
+        ,ACW_TIME
+        ,RING_TIME
+        ,TOTAL_DURATION
+        ,dateContactWarehoused
+        ,CONTACT_ID
+        ,MASTER_CONTACT_ID
+        ,CONTACT_TYPE
+        ,CONTACT_TYPE_NAME
+        ,DISPOSITION
+        )
+        SELECT
+            COMPANY_ID,
+            TIMESTAMP,
+            formatIntervalTime(TIMESTAMP) AS INTERVAL_TIME_ZONE,
+            LASTUPDATETIME,
+            YMD,
+            YYYYMM,
+            YYYY,
+            MM,
+            DD,
+            HH24,
+            HH24MI,
+            WEEK,
+            HOLI,
+            (SELECT TENANT_ID       FROM ECP.ECP_AGENT      WHERE COMPANY_ID = ec.COMPANY_ID AND CC_CTI_ID = ec.AGENTID) AS TENANT_ID,
+            (SELECT CENTER_ID   FROM ECP.ECP_AGENT      WHERE COMPANY_ID = ec.COMPANY_ID AND CC_CTI_ID = ec.AGENTID) AS CENTER_ID,
+            (SELECT TEAM_ID       FROM ECP.ECP_AGENT      WHERE COMPANY_ID = ec.COMPANY_ID AND CC_CTI_ID = ec.AGENTID) AS TEAM_ID,
+            (SELECT PART_ID       FROM ECP.ECP_AGENT      WHERE COMPANY_ID = ec.COMPANY_ID AND CC_CTI_ID = ec.AGENTID) AS PART_ID,
+            AGENTID AS AGENT_ID,
+            (SELECT NAME      FROM ECP.ECP_AGENT  WHERE COMPANY_ID = ec.COMPANY_ID AND CC_CTI_ID = ec.AGENTID) AS AGENT_NAME,
+            ec.MEDIATYPEID AS MEDIA_TYPE_ID,
+            ec.CAMPAIGNID AS SCENARIO_ID,
+            ec.CAMPAIGNNAME AS SCENARIO_NAME,
+            ec.SKILLID AS SERVICE_ID,
+            (SELECT label      FROM U_SERVICE us      WHERE us.CTI_CODE = ec.SKILLID AND us.COMPANY_ID = ec.COMPANY_ID) AS SERVICE_NAME,
+            ec.FROMADDRESS AS ANI,
+            ec.TOADDRESS AS DNIS,
+            ec.TOADDRESS AS DNIS_NAME,
+            ec.TOADDRESS AS DIALED_NUM,
+            ec.CONTACTSTARTDATE AS CONTACT_START_DATE,
+            DATE_SUB(ec.CONTACTSTARTDATE, INTERVAL FLOOR(ec.TOTALDURATIONSECONDS) SECOND) AS CONTACT_END_DATE,
+            CASE WHEN ec.ABANDONED = 0  and ec.AGENTSECONDS  > 0 THEN 1 ELSE 0 END as ans,
+                        CASE WHEN ec.ABANDONED = 1  THEN 1 ELSE 0 END as abd,
+                        round(ec.PREQUEUESECONDS) AS IVR_TIME,
+                        round(ec.INQUEUESECONDS-ec.ROUTINGTIME) as QUEUE_TIME,
+                        CASE WHEN ec.ABANDONED = 0  and ec.AGENTSECONDS  > 0 THEN round(ec.INQUEUESECONDS-ec.ROUTINGTIME) ELSE 0 END as ANS_QUEUE_TIME,
+                        CASE WHEN ec.ABANDONED = 1  THEN round(ec.INQUEUESECONDS-ec.ROUTINGTIME) ELSE 0 END as ABD_QUEUE_TIME,
+                        0 AS PENDING_TIME,
+                        round((ec.AGENTSECONDS - ec.CONFERENCESECONDS - ec.HOLDSECONDS)) as TALK_TIME,
+                        round(ec.HOLDSECONDS)  as HOLD_TIME,
+                        round(ec.ACWSECONDS)  as ACW_TIME,
+                        round(ec.ROUTINGTIME) as RING_TIME,
+                        round(ec.TOTALDURATIONSECONDS) as TOTAL_DURATION,
+                        ec.dateContactWarehoused,
+                        ec.CONTACTID,
+                        ec.MASTERCONTACTID,
+                        ec.TRANSFERINDICATORID,
+                        ec.TRANSFERINDICATORNAME,
+                        ec.DISPOSITIONNOTES AS DISPOSITION
+                    from    E_CONTACT ec
+                    where ec.ISOUTBOUND = 0
+                    AND ec.COMPANY_ID = #{companyId}
+                    AND ec.YMD = #{ymd}
+                    AND ec.LASTUPDATETIME > #{lastDateTime}
+                    AND ec.STATENAME = 'EndContact'
+    </insert>
+
+
+    <insert id="insertEcontact" parameterType="com.ecstel.sym.utils.DataMap">
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO e_contact (
+            COMPANY_ID,
+            TIMESTAMP,
+            YMD,
+            YYYYMM,
+            YYYY,
+            MM,
+            DD,
+            HH24,
+            HH24MI,
+            WEEK,
+            HOLI,
+            ABANDONED,
+            ABANDONSECONDS,
+            ACWSECONDS,
+            AGENTID,
+            AGENTSECONDS,
+            ANALYTICSPROCESSEDDATE,
+            CALLBACKTIME,
+            CAMPAIGNID,
+            CAMPAIGNNAME,
+            CONFERENCESECONDS,
+            CONTACTID,
+            CONTACTSTARTDATE,
+            DATEACWWAREHOUSED,
+            DATECONTACTWAREHOUSED,
+            DIGITALCONTACTSTATEID,
+            DIGITALCONTACTSTATENAME,
+            DISPOSITIONNOTES,
+            ENDREASON,
+            FIRSTNAME,
+            FROMADDRESS,
+            HIGHPROFICIENCY,
+            HOLDCOUNT,
+            HOLDSECONDS,
+            INQUEUESECONDS,
+            ISACTIVE,
+            ISANALYTICSPROCESSED,
+            ISLOGGED,
+            ISOUTBOUND,
+            ISREFUSED,
+            ISSHORTABANDON,
+            ISTAKEOVER,
+            ISWAREHOUSED,
+            LASTNAME,
+            LASTUPDATETIME,
+            LOWPROFICIENCY,
+            MASTERCONTACTID,
+            MEDIASUBTYPEID,
+            MEDIASUBTYPENAME,
+            MEDIATYPEID,
+            MEDIATYPENAME,
+            POINTOFCONTACTID,
+            POINTOFCONTACTNAME,
+            POSTQUEUESECONDS,
+            PREQUEUESECONDS,
+            PRIMARYDISPOSITIONID,
+            REFUSEREASON,
+            REFUSETIME,
+            RELEASESECONDS,
+            ROUTINGATTRIBUTE,
+            ROUTINGTIME,
+            SECONDARYDISPOSITIONID,
+            SERVICELEVELFLAG,
+            SKILLID,
+            SKILLNAME,
+            STATEID,
+            STATENAME,
+            TEAMID,
+            TEAMNAME,
+            TOADDRESS,
+            TOTALDURATIONSECONDS,
+            TRANSFERINDICATORID,
+            TRANSFERINDICATORNAME
+            ) VALUES (
+            #{item.companyId},
+            #{item.dateTime},
+            DATE_FORMAT(#{item.dateTime}, '%Y%m%d'),
+            CONCAT(YEAR(#{item.dateTime}), LPAD(MONTH(#{item.dateTime}), 2, '0')),
+            YEAR(#{item.dateTime}),
+            LPAD(MONTH(#{item.dateTime}), 2, '0'),
+            LPAD(DAY(#{item.dateTime}), 2, '0'),
+            LPAD(HOUR(#{item.dateTime}), 2, '0'),
+            CONCAT(LPAD(HOUR(#{item.dateTime}), 2, '0'), LPAD(MINUTE(#{item.dateTime}), 2, '0')),
+            #{item.week},
+            #{item.holi},
+            #{item.abandoned},
+            #{item.abandonSeconds},
+            #{item.acwSeconds},
+            #{item.agentId},
+            #{item.agentSeconds},
+            #{item.dateTime},
+            #{item.callbackTime},
+            #{item.campaignId},
+            #{item.campaignName},
+            #{item.conferenceSeconds},
+            #{item.contactId},
+            #{item.contactStartDate},
+            #{item.dateACWWarehoused},
+            #{item.dateContactWarehoused},
+            #{item.digitalContactStateId},
+            #{item.digitalContactStateName},
+            #{item.dispositionNotes},
+            #{item.endReason},
+            #{item.firstName},
+            #{item.fromAddress},
+            #{item.highProficiency},
+            #{item.holdCount},
+            #{item.holdSeconds},
+            #{item.inQueueSeconds},
+            #{item.isActive},
+            #{item.isAnalyticsProcessed},
+            #{item.isLogged},
+            #{item.isOutbound},
+            #{item.isRefused},
+            #{item.isShortAbandon},
+            #{item.isTakeover},
+            #{item.isWarehoused},
+            #{item.lastName},
+            #{item.lastUpdateTime},
+            #{item.lowProficiency},
+            #{item.masterContactId},
+            #{item.mediaSubTypeId},
+            #{item.mediaSubTypeName},
+            #{item.mediaTypeId},
+            #{item.mediaTypeName},
+            #{item.pointOfContactId},
+            #{item.pointOfContactName},
+            #{item.postQueueSeconds},
+            #{item.preQueueSeconds},
+            #{item.primaryDispositionId},
+            #{item.refuseReason},
+            #{item.refuseTime},
+            #{item.releaseSeconds},
+            #{item.routingAttribute},
+            #{item.routingTime},
+            #{item.secondaryDispositionId},
+            #{item.serviceLevelFlag},
+            #{item.skillId},
+            #{item.skillName},
+            #{item.stateId},
+            #{item.stateName},
+            #{item.teamId},
+            #{item.teamName},
+            #{item.toAddress},
+            #{item.totalDurationSeconds},
+            #{item.transferIndicatorId},
+            #{item.transferIndicatorName}
+            )
+
+        </foreach>
+    </insert>
+
+    <insert id="insertEcontactPds" parameterType="com.ecstel.sym.utils.DataMap">
+        DELETE from  e_contact_pds;
+
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO e_contact_pds (
+            COMPANY_ID,
+            TIMESTAMP,
+            YMD,
+            YYYYMM,
+            YYYY,
+            MM,
+            DD,
+            HH24,
+            HH24MI,
+            WEEK,
+            HOLI,
+            ABANDONED,
+            ABANDONSECONDS,
+            ACWSECONDS,
+            AGENTID,
+            AGENTSECONDS,
+            ANALYTICSPROCESSEDDATE,
+            CALLBACKTIME,
+            CAMPAIGNID,
+            CAMPAIGNNAME,
+            CONFERENCESECONDS,
+            CONTACTID,
+            CONTACTSTARTDATE,
+            DATEACWWAREHOUSED,
+            DATECONTACTWAREHOUSED,
+            DIGITALCONTACTSTATEID,
+            DIGITALCONTACTSTATENAME,
+            DISPOSITIONNOTES,
+            ENDREASON,
+            FIRSTNAME,
+            FROMADDRESS,
+            HIGHPROFICIENCY,
+            HOLDCOUNT,
+            HOLDSECONDS,
+            INQUEUESECONDS,
+            ISACTIVE,
+            ISANALYTICSPROCESSED,
+            ISLOGGED,
+            ISOUTBOUND,
+            ISREFUSED,
+            ISSHORTABANDON,
+            ISTAKEOVER,
+            ISWAREHOUSED,
+            LASTNAME,
+            LASTUPDATETIME,
+            LOWPROFICIENCY,
+            MASTERCONTACTID,
+            MEDIASUBTYPEID,
+            MEDIASUBTYPENAME,
+            MEDIATYPEID,
+            MEDIATYPENAME,
+            POINTOFCONTACTID,
+            POINTOFCONTACTNAME,
+            POSTQUEUESECONDS,
+            PREQUEUESECONDS,
+            PRIMARYDISPOSITIONID,
+            REFUSEREASON,
+            REFUSETIME,
+            RELEASESECONDS,
+            ROUTINGATTRIBUTE,
+            ROUTINGTIME,
+            SECONDARYDISPOSITIONID,
+            SERVICELEVELFLAG,
+            SKILLID,
+            SKILLNAME,
+            STATEID,
+            STATENAME,
+            TEAMID,
+            TEAMNAME,
+            TOADDRESS,
+            TOTALDURATIONSECONDS,
+            TRANSFERINDICATORID,
+            TRANSFERINDICATORNAME
+            ) VALUES (
+            #{item.companyId},
+            #{item.dateTime},
+            DATE_FORMAT(#{item.dateTime}, '%Y%m%d'),
+            CONCAT(YEAR(#{item.dateTime}), LPAD(MONTH(#{item.dateTime}), 2, '0')),
+            YEAR(#{item.dateTime}),
+            LPAD(MONTH(#{item.dateTime}), 2, '0'),
+            LPAD(DAY(#{item.dateTime}), 2, '0'),
+            LPAD(HOUR(#{item.dateTime}), 2, '0'),
+            CONCAT(LPAD(HOUR(#{item.dateTime}), 2, '0'), LPAD(MINUTE(#{item.dateTime}), 2, '0')),
+            #{item.week},
+            #{item.holi},
+            #{item.abandoned},
+            #{item.abandonSeconds},
+            #{item.acwSeconds},
+            #{item.agentId},
+            #{item.agentSeconds},
+            #{item.dateTime},
+            #{item.callbackTime},
+            #{item.campaignId},
+            #{item.campaignName},
+            #{item.conferenceSeconds},
+            #{item.contactId},
+            #{item.contactStartDate},
+            #{item.dateACWWarehoused},
+            #{item.dateContactWarehoused},
+            #{item.digitalContactStateId},
+            #{item.digitalContactStateName},
+            #{item.dispositionNotes},
+            #{item.endReason},
+            #{item.firstName},
+            #{item.fromAddress},
+            #{item.highProficiency},
+            #{item.holdCount},
+            #{item.holdSeconds},
+            #{item.inQueueSeconds},
+            #{item.isActive},
+            #{item.isAnalyticsProcessed},
+            #{item.isLogged},
+            #{item.isOutbound},
+            #{item.isRefused},
+            #{item.isShortAbandon},
+            #{item.isTakeover},
+            #{item.isWarehoused},
+            #{item.lastName},
+            #{item.lastUpdateTime},
+            #{item.lowProficiency},
+            #{item.masterContactId},
+            #{item.mediaSubTypeId},
+            #{item.mediaSubTypeName},
+            #{item.mediaTypeId},
+            #{item.mediaTypeName},
+            #{item.pointOfContactId},
+            #{item.pointOfContactName},
+            #{item.postQueueSeconds},
+            #{item.preQueueSeconds},
+            #{item.primaryDispositionId},
+            #{item.refuseReason},
+            #{item.refuseTime},
+            #{item.releaseSeconds},
+            #{item.routingAttribute},
+            #{item.routingTime},
+            #{item.secondaryDispositionId},
+            #{item.serviceLevelFlag},
+            #{item.skillId},
+            #{item.skillName},
+            #{item.stateId},
+            #{item.stateName},
+            #{item.teamId},
+            #{item.teamName},
+            #{item.toAddress},
+            #{item.totalDurationSeconds},
+            #{item.transferIndicatorId},
+            #{item.transferIndicatorName}
+            )
+
+        </foreach>
+    </insert>
+
+
+    <insert id="insertUservice" parameterType="com.ecstel.sym.utils.DataMap">
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO u_service (
+            COMPANY_ID,
+            TENANT_ID,
+            TYPE,
+            CTI_CODE,
+            CTI_CODE_NAME,
+            LABEL,
+            USE_YN,
+            CREATED_AT,
+            UPDATED_AT,
+            DIRECTION,
+            CTI_USE_DISPOSITIONS,
+            CAMPAIGN_ID,
+            CAMPAIGN_NAME
+            )
+            VALUES (
+            #{item.companyId},
+            (select min(id) from ecp.ecp_tenant where company_id = #{item.companyId}),
+            #{item.mediaTypeName},
+            #{item.skillId},
+            #{item.skillName},
+            #{item.skillName},
+            'Y',
+            NOW(),
+            NOW(),
+            <if test="item.isOutbound == 'false'">
+                'INBOUND',
+            </if>
+            <if test="item.isOutbound == 'true'">
+                'OUTBOUND',
+            </if>
+            'N',
+            #{item.campaignId},
+            #{item.campaignName}
+            )
+            ON DUPLICATE KEY UPDATE
+            CTI_CODE_NAME = #{item.skillName},
+            UPDATED_AT = NOW(),
+            CAMPAIGN_ID = #{item.campaignId},
+            CAMPAIGN_NAME = #{item.campaignName},
+            DIRECTION = <if test="item.isOutbound == 'false'">
+            'INBOUND'
+            </if>
+            <if test="item.isOutbound == 'true'">
+                'OUTBOUND'
+            </if>
+
+        </foreach>
+    </insert>
+
+
+    <insert id="insertUcampaign" parameterType="com.ecstel.sym.utils.DataMap">
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO U_CAMPAIGN_NICE (
+            COMPANY_ID,
+            TENANT_ID,
+            CTI_CODE,
+            CTI_CODE_NAME,
+            LABEL,
+            CTI_ACTIVE_YN,
+            USE_YN,
+            NAME_EN,
+            SORT,
+            CREATED_BY,
+            CREATED_AT,
+            UPDATED_BY,
+            UPDATED_AT
+            )
+            VALUES
+            (
+            #{item.companyId},
+            (select min(id) from ecp.ecp_tenant where company_id = #{item.companyId}),
+             #{item.campaignId},
+            #{item.campaignName}
+            #{item.campaignName}
+            <if test="item.isActive == 'True'">
+            'Y',
+            </if>
+            <if test="item.isActive == 'False'">
+                'N',
+            </if>
+            'Y',
+            '',
+            0,
+            'SYSTEM',
+            now(),
+            'SYSTEM',
+            now()
+            )
+            ON DUPLICATE KEY UPDATE
+            CTI_CODE_NAME = #{item.campaignName}
+            CTI_ACTIVE_YN = <if test="item.isActive == 'True'">
+            'Y',
+            </if>
+            <if test="item.isActive == 'False'">
+                'N',
+            </if>
+            UPDATED_AT = now()
+
+        </foreach>
+    </insert>
+
+    <insert id="insertUAcw" parameterType="com.ecstel.sym.utils.DataMap">
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO U_ACW (
+            COMPANY_ID,
+            CTI_ACTION,
+            CTI_CATEGORY,
+            CTI_CODE,
+            CTI_CODE_NAME,
+            LABEL,
+            USE_YN,
+            CTI_IS_INBOUND,
+            CTI_IS_OUTBOUND,
+            CTI_IS_PREVIEW,
+            CTI_IS_SHOWTOAGENT,
+            SORT,
+            CREATED_AT,
+            UPDATED_AT
+            )
+            VALUES
+            (
+            #{item.companyId},
+            '',
+             #{item.systemOutcome},
+            #{item.dispositionId},
+            #{item.dispositionName},
+            #{item.dispositionName},
+            'Y',
+            'N',
+            <if test="item.isPreviewDisposition == 'true'">
+                'Y',
+            </if>
+            <if test="item.isPreviewDisposition == 'false'">
+                'N',
+            </if>
+            'N',
+            'N',
+            0,
+            now(),
+            now()
+            )
+            ON DUPLICATE KEY UPDATE
+            CTI_CODE_NAME = #{item.dispositionName}
+            ,UPDATED_AT = now()
+        </foreach>
+    </insert>
+
+    <insert id="insertUNrsn" parameterType="com.ecstel.sym.utils.DataMap">
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO U_NRSN (
+            COMPANY_ID,
+            CTI_CODE,
+            CTI_CODE_NAME,
+            LABEL,
+            USE_YN,
+            SORT,
+            CREATED_AT,
+            UPDATED_AT
+            )
+            VALUES (
+                    #{item.companyId},
+                    #{item.id},
+                    #{item.name},
+                    #{item.name},
+                    'Y',
+                    0,
+                    now(),
+                    now()
+                )
+            ON DUPLICATE KEY UPDATE
+            CTI_CODE_NAME = #{item.name},
+            UPDATED_AT = now()
+        </foreach>
+    </insert>
+
+
+
+
+    <insert id="insertUPoc" parameterType="com.ecstel.sym.utils.DataMap">
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO U_CHAT_POINT (
+            COMPANY_ID,
+            TENANT_ID,
+            TYPE,
+            CTI_CODE,
+            CTI_CODE_NAME,
+            LABEL,
+            USE_YN,
+            SORT,
+            CREATED_AT,
+            UPDATED_AT
+            )
+            VALUES (
+            #{item.companyId},
+            (select min(id) from ecp.ecp_tenant where company_id = #{item.companyId}),
+            #{item.mediaTypeName},
+            #{item.contactAddress},
+            #{item.contactDescription},
+            #{item.contactDescription},
+            'Y',
+            0,
+            now(),
+            now()
+                )
+            ON DUPLICATE KEY UPDATE
+            CTI_CODE_NAME = #{item.contactDescription},
+            UPDATED_AT = now()
+        </foreach>
+    </insert>
+
+
+    <insert id="insertEagentState" parameterType="com.ecstel.sym.utils.DataMap">
+        <foreach collection="list" item="item" separator=";">
+        INSERT INTO E_AGT_STATE (
+        COMPANY_ID
+        ,TIMESTAMP
+        ,INTERVAL_TIME_ZONE
+        ,LAST_UPDATE_TIME
+        ,YMD
+        ,YYYYMM
+        ,YYYY
+        ,MM
+        ,DD
+        ,HH24
+        ,HH24MI
+        ,WEEK
+        ,HOLI
+        ,TENANT_ID
+        ,CENTER_ID
+        ,TEAM_ID
+        ,PART_ID
+        ,AGENT_ID
+        ,AGENT_NAME
+        ,STATEINDEX
+        ,AGENTSTATEID
+        ,AGENTSTATENAME
+        ,AGENTSESSIONID
+        ,CONTACTID
+        ,SKILLID
+        ,SKILLNAME
+        ,MEDIATYPEID
+        ,MEDIATYPENAME
+        ,FROMADDRESS
+        ,TOADDRESS
+        ,OUTSTATEID
+        ,OUTSTATEDESCRIPTION
+        ,DURATION
+
+        ) VALUES (
+        #{item.companyId}
+        ,#{item.startDateTime}
+        ,formatIntervalTime(#{item.currentStartDateTime})
+        ,now()
+        ,DATE_FORMAT(#{item.currentStartDateTime}, '%Y%m%d')
+        ,DATE_FORMAT(#{item.currentStartDateTime}, '%Y%m')
+        ,DATE_FORMAT(#{item.currentStartDateTime}, '%Y')
+        ,DATE_FORMAT(#{item.currentStartDateTime}, '%m')
+        ,DATE_FORMAT(#{item.currentStartDateTime}, '%d')
+        ,DATE_FORMAT(#{item.currentStartDateTime}, '%H')
+        ,DATE_FORMAT(#{item.currentStartDateTime}, '%H%i')
+        ,#{item.week}
+        ,'N'
+        ,(SELECT TENANT_ID FROM ECP.ECP_AGENT WHERE COMPANY_ID = #{item.companyId} AND CC_CTI_ID = #{item.agentId})
+        ,(SELECT CENTER_ID FROM ECP.ECP_AGENT WHERE COMPANY_ID = #{item.companyId} AND CC_CTI_ID = #{item.agentId})
+        ,(SELECT TEAM_ID FROM ECP.ECP_AGENT WHERE COMPANY_ID = #{item.companyId} AND CC_CTI_ID = #{item.agentId})
+        ,(SELECT PART_ID FROM ECP.ECP_AGENT WHERE COMPANY_ID = #{item.companyId} AND CC_CTI_ID = #{item.agentId})
+        ,#{item.agentId}
+        ,(SELECT NAME FROM ECP.ECP_AGENT WHERE COMPANY_ID = #{item.companyId} AND CC_CTI_ID = #{item.agentId})
+        ,#{item.stateIndex}
+        ,#{item.agentStateId}
+        ,#{item.agentStateName}
+        ,#{item.agentSessionId}
+        ,#{item.contactId}
+        ,#{item.skillId}
+        ,#{item.skillName}
+        ,#{item.mediaTypeId}
+        ,#{item.mediaTypeName}
+        ,#{item.fromAddress}
+        ,#{item.toAddress}
+        ,#{item.outStateId}
+        ,#{item.outStateDescription}
+        ,#{item.duration}
+        )
+        </foreach>
+    </insert>
+
+
+
+    <insert id="insertStatHServiceI" parameterType="com.ecstel.sym.utils.DataMap">
+        INSERT INTO STAT_H_IBG_I
+        (
+        COMPANY_ID
+        ,TENANT_ID
+        ,ERSDBDATE
+        ,TIMESTAMP
+        ,YMD
+        ,YYYYMM
+        ,YYYY
+        ,MM
+        ,DD
+        ,HH24
+        ,HH24MI
+        ,WEEK
+        ,HOLI
+        ,IBGNAME
+        ,DEST_PHONE
+        ,OFFER
+        ,ANS
+        ,ABD
+        ,ABD_IVR
+        ,ANSDELAY
+        ,SVCLEVEL
+        ,ABDTIME
+        ,TALKTIME
+        ,HOLDTIME
+        ,ACWTIME
+        ,TRANS_IN_ANS
+        ,TRANS_IN_ABD
+        ,ANS_COBROWSING
+        ,AVERAGEHANDLETIME
+        ,AVERAGEINQUEUETIME
+        ,AVERAGETALKTIME
+        ,AVERAGEWRAPTIME
+        ,CONTACTSACTIVE
+        ,CONTACTSHANDLED
+        ,CONTACTSOFFERED
+        ,CONTACTSQUEUED
+        ,CONTACTSOUTOFSLA
+        ,CONTACTSWITHINSLA
+        ,LONGESTQUEUEDUR
+        ,MEDIATYPEID
+        ,MEDIATYPENAME
+        ,QUEUECOUNT
+        ,DIALS
+        ,CONNECTS
+        ,CONNECTSAHT
+        ,ANSDELAY1
+        ,ANSDELAY2
+        ,ANSDELAY3
+        ,ANSDELAY4
+        ,ANSDELAY5
+        ,ABDDELAY1
+        ,ABDDELAY2
+        ,ABDDELAY3
+        ,ABDDELAY4
+        ,ABDDELAY5
+        ,ANSQUEUETIME
+        ,ABDQUEUETIME
+        ,IVRTIME
+        ,QUEUETIME)
+        SELECT
+        STAT.COMPANY_ID
+        ,(select TENANT_ID from U_SERVICE ue where ue.CTI_CODE = SERVICE_ID)
+        ,	NOW()
+        ,	STAT.INTERVAL_TIME_ZONE
+        ,DATE_FORMAT(STAT.INTERVAL_TIME_ZONE, '%Y%m%d') AS YMD
+        ,DATE_FORMAT(STAT.INTERVAL_TIME_ZONE, '%Y%m') AS YYYYMM
+        ,DATE_FORMAT(STAT.INTERVAL_TIME_ZONE, '%Y') AS YYYY
+        ,DATE_FORMAT(STAT.INTERVAL_TIME_ZONE, '%m') AS MM
+        ,DATE_FORMAT(STAT.INTERVAL_TIME_ZONE, '%d') AS DD
+        ,DATE_FORMAT(STAT.INTERVAL_TIME_ZONE, '%H') AS HH24
+        ,DATE_FORMAT(STAT.INTERVAL_TIME_ZONE, '%H%i') AS HH24mi
+        ,'1' as week
+        ,'N' as HOLI
+        ,(select label from U_SERVICE ue where ue.CTI_CODE = STAT.SERVICE_ID) AS IBG_NAME
+        ,'' AS DEST_PHONE
+        ,SUM(STAT.ANS+STAT.ABD) AS OFFER
+        ,SUM(ANS) AS ANS
+        ,SUM(ABD) AS ABD
+        ,0 AS ABD_IVR
+        ,0 AS ANS_DELAY
+        ,0 AS SVCLEVEL
+        ,0 AS ABDTIME
+        ,SUM(TALK_TIME) AS TALKTIME
+        ,SUM(HOLD_TIME) AS HOLDTIME
+        ,SUM(ACW_TIME) AS ACWTIME
+        ,0 AS TRANS_IN_ANS
+        ,0 AS TRANS_IN_ABD
+        ,0 AS ANS_COBROWSING
+        ,0 AS AVERAGEHANDLETIME
+        ,0 AS AVERAGEINQUEUETIME
+        ,0 AS AVERAGETALKTIME
+        ,0 AS AVERAGEWRAPTIME
+        ,0 AS CONTACTSACTIVE
+        ,0 AS CONTACTSHANDLED
+        ,0 AS CONTACTSOFFERED
+        ,0 AS CONTACTSQUEUED
+        ,0 AS CONTACTSOUTOFSLA
+        ,0 AS CONTACTSWITHINSLA
+        ,0 AS LONGESTQUEUEDUR
+        ,0 AS MEDIATYPEID
+        ,'' AS  ASMEDIATYPENAME
+        ,0 AS QUEUECOUNT
+        ,0 AS DIALS
+        ,0 AS CONNECTS
+        ,0 AS CONNECTSAHT
+        ,SUM(ANS_DELAY1) AS ANSDELAY1
+        ,SUM(ANS_DELAY2) AS ANSDELAY2
+        ,SUM(ANS_DELAY3) AS ANSDELAY3
+        ,SUM(ANS_DELAY4) AS ANSDELAY4
+        ,SUM(ANS_DELAY5) AS ANSDELAY5
+        ,SUM(ABD_DELAY1) AS ABDDELAY1
+        ,SUM(ABD_DELAY2) AS ABDDELAY2
+        ,SUM(ABD_DELAY3) AS ABDDELAY3
+        ,SUM(ABD_DELAY4) AS ABDDELAY4
+        ,SUM(ABD_DELAY5) AS ABDDELAY5
+        ,SUM(ANS_QUEUE_TIME) AS ANS_QUEUE_TIME
+        ,SUM(ABD_QUEUE_TIME) AS ABD_QUEUE_TIME
+        ,SUM(IVR_TIME) AS IVR_TIME
+        ,SUM(QUEUE_TIME) AS QUEUE_TIME
+        FROM (
+        SELECT
+        ci.COMPANY_ID ,
+        ci.INTERVAL_TIME_ZONE ,
+        SERVICE_ID,
+        ans + abd as offer,
+        (ans),
+        (abd),
+        (IVR_TIME),
+        (QUEUE_TIME),
+        (ANS_QUEUE_TIME),
+        (ABD_QUEUE_TIME),
+        (PENDING_TIME),
+        (TALK_TIME),
+        (HOLD_TIME),
+        (ACW_TIME),
+        (RING_TIME),
+        <![CDATA[
+        CASE WHEN ANS_QUEUE_TIME > 0 AND ANS_QUEUE_TIME <= 10 THEN 1 ELSE 0 END AS ANS_DELAY1,
+        CASE WHEN ANS_QUEUE_TIME > 10 AND ANS_QUEUE_TIME <= 20 THEN 1 ELSE 0 END  AS ANS_DELAY2,
+        CASE WHEN ANS_QUEUE_TIME > 20 AND ANS_QUEUE_TIME <= 30 THEN 1 ELSE 0 END AS ANS_DELAY3,
+        CASE WHEN ANS_QUEUE_TIME > 30 AND ANS_QUEUE_TIME <= 60 THEN 1 ELSE 0 END  AS ANS_DELAY4,
+        CASE WHEN ANS_QUEUE_TIME > 60  THEN 1 ELSE 0 END AS ANS_DELAY5,
+        CASE WHEN ABD_QUEUE_TIME > 0 AND ABD_QUEUE_TIME <= 10 THEN 1 ELSE 0 END AS ABD_DELAY1,
+        CASE WHEN ABD_QUEUE_TIME > 10 AND ABD_QUEUE_TIME <= 20 THEN 1 ELSE 0 END  AS ABD_DELAY2,
+        CASE WHEN ABD_QUEUE_TIME > 20 AND ABD_QUEUE_TIME <= 30 THEN 1 ELSE 0 END AS ABD_DELAY3,
+        CASE WHEN ABD_QUEUE_TIME > 30 AND ABD_QUEUE_TIME <= 60 THEN 1 ELSE 0 END  AS ABD_DELAY4,
+        CASE WHEN ABD_QUEUE_TIME > 60  THEN 1 ELSE 0 END AS ABD_DELAY5,
+        CASE WHEN CONTACT_TYPE = 0  THEN 1 ELSE 0 END AS IN_CONTACT_CNT,
+        CASE WHEN CONTACT_TYPE = 1  THEN 1 ELSE 0 END AS SKILL_TRANSFERED_CNT,
+        CASE WHEN CONTACT_TYPE = 2  THEN 1 ELSE 0 END AS AGENT_TRANSFERED_CNT,
+        CASE WHEN CONTACT_TYPE = 3  THEN 1 ELSE 0 END AS CONSULTED_CNT,
+        CASE WHEN CONTACT_TYPE = 4  THEN 1 ELSE 0 END AS TAKEOVER_CNT,
+        ]]>
+        MEDIA_TYPE_ID
+        FROM
+        C_INBOUND ci
+        WHERE YMD = #{ymd}
+        AND COMPANY_ID = #{companyId}
+        AND INTERVAL_TIME_ZONE >#{lastDateTime}
+        ) STAT
+        GROUP BY STAT.COMPANY_ID ,STAT.SERVICE_ID ,STAT.INTERVAL_TIME_ZONE,MEDIA_TYPE_ID
+    </insert>
+
+
+
+
+
+    <insert id="deleteStatHAgentStateData" parameterType="com.ecstel.sym.utils.DataMap">
+        DELETE FROM STAT_H_AGT_STATE_I where ymd = #{ymd} and company_id = #{companyId};
+    </insert>
+
+    <insert id="deleteStatHserviceData" parameterType="com.ecstel.sym.utils.DataMap">
+        DELETE FROM STAT_H_IBG_I where ymd = #{ymd} and company_id = #{companyId};
+    </insert>
+
+    <insert id="deleteStatHAgtData" parameterType="com.ecstel.sym.utils.DataMap">
+        DELETE FROM STAT_H_AGT_I where ymd = #{ymd} and company_id = #{companyId};
+    </insert>
+
+    <insert id="deleteStatHAgtinboundData" parameterType="com.ecstel.sym.utils.DataMap">
+        DELETE FROM stat_h_agt_inbound where ymd = #{ymd} and company_id = #{companyId};
+    </insert>
+
+    <insert id="deleteStatHAgtoutboundData" parameterType="com.ecstel.sym.utils.DataMap">
+        DELETE FROM stat_h_agt_outbound where ymd = #{ymd} and company_id = #{companyId};
+    </insert>
+
+
+
+
+
+
+
+    <insert id="insertStatHAgtI" parameterType="com.ecstel.sym.utils.DataMap">
+
+        DELETE FROM STAT_H_AGT_I where ymd = #{ymd} and company_id = #{companyId} and timestamp > #{lastDateTime};
+        INSERT	INTO STAT_H_AGT_I
+        (
+            TIMESTAMP
+        ,YMD
+        ,YYYYMM
+        ,YYYY
+        ,MM
+        ,DD
+        ,HH24
+        ,HH24MI
+        ,WEEK
+        ,HOLI
+        ,COMPANY_ID
+        ,TENANT_ID
+        ,CENTER_ID
+        ,TEAM_ID
+        ,PART_ID
+        ,AGTID
+        ,AGT_NAME
+        ,LOGINTIME
+        ,READYTIME
+        ,NOTREADYTITME
+        ,NRSN1TIME
+        ,NRSN2TIME
+        ,NRSN3TIME
+        ,NRSN4TIME
+        ,NRSN5TIME
+        ,NRSN6TIME
+        ,NRSN7TIME
+        ,NRSN8TIME
+        ,NRSN9TIME
+        ,NRSN10TIME
+        ,NRSN11TIME
+        ,NRSN12TIME
+        ,NRSN13TIME
+        ,NRSN14TIME
+        ,NRSN15TIME
+        ,NRSN16TIME
+        ,NRSN17TIME
+        ,NRSN18TIME
+        ,NRSN19TIME
+        ,NRSN20TIME
+        ,nrsnetctime
+        )
+        select
+            INTERVAL_TIME_ZONE as timestamp,
+         	DATE_FORMAT(INTERVAL_TIME_ZONE, '%Y%m%d'),
+            CONCAT(YEAR(INTERVAL_TIME_ZONE), LPAD(MONTH(INTERVAL_TIME_ZONE), 2, '0')),
+            YEAR(INTERVAL_TIME_ZONE),
+            LPAD(MONTH(INTERVAL_TIME_ZONE), 2, '0'),
+            LPAD(DAY(INTERVAL_TIME_ZONE), 2, '0'),
+            LPAD(HOUR(INTERVAL_TIME_ZONE), 2, '0'),
+            CONCAT(LPAD(HOUR(INTERVAL_TIME_ZONE), 2, '0'), LPAD(MINUTE(INTERVAL_TIME_ZONE), 2, '0')),
+            max(week) as week,
+            max(holi) as holi,
+         	company_id,
+         	tenant_id,
+         	center_id,
+         	team_id,
+         	part_id,
+         	agent_id,
+         	max(agent_name) as agent_name,
+         	sum(login_time) as login_time,
+         	sum(avail_time) as avail_time,
+         	sum(notready_time) as notready_time,
+         	sum(nrsn1time) as nrsn1time,
+         	sum(NRSN2TIME) as NRSN2TIME,
+         	sum(NRSN3TIME) as nrsn3time,
+         	sum(nrsn4time) as nrsn4time,
+         	sum(nrsn5time) as nrsn5time,
+         	sum(nrsn6time) as nrsn6time,
+         	sum(nrsn7time) as nrsn7time,
+         	sum(nrsn8time) as nrsn8time,
+         	sum(nrsn9time) as nrsn9time,
+         	sum(nrsn10time) as nrsn10time,
+         	sum(nrsn11time) as nrsn11time,
+         	sum(nrsn12time) as nrsn12time,
+         	sum(nrsn13time) as nrsn13time,
+         	sum(nrsn14time) as nrsn14time,
+         	sum(nrsn15time) as nrsn15time,
+			sum(nrsn16time) as nrsn16time,
+			sum(nrsn17time) as nrsn17time,
+			sum(nrsn18time) as nrsn18time,
+			sum(nrsn19time) as nrsn19time,
+			sum(nrsn20time) as nrsn20time,
+			sum(nrsnetctime) as nrsnetctime
+        from (
+            SELECT
+            INTERVAL_TIME_ZONE ,
+            company_id,
+            tenant_id,
+            center_id,
+            team_id,
+            part_id,
+            agent_id,
+            agent_name,
+            week,
+            holi,
+            CASE WHEN MAPPING_NRSN = 'NRSN1' THEN (DURATION) ELSE 0 END AS NRSN1TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN2' THEN (DURATION) ELSE 0 END AS NRSN2TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN3' THEN (DURATION) ELSE 0 END AS NRSN3TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN4' THEN (DURATION) ELSE 0 END AS NRSN4TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN5' THEN (DURATION) ELSE 0 END AS NRSN5TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN6' THEN (DURATION) ELSE 0 END AS NRSN6TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN7' THEN (DURATION) ELSE 0 END AS NRSN7TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN8' THEN (DURATION) ELSE 0 END AS NRSN8TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN9' THEN (DURATION) ELSE 0 END AS NRSN9TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN10' THEN (DURATION) ELSE 0 END AS NRSN10TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN11' THEN (DURATION) ELSE 0 END AS NRSN11TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN12' THEN (DURATION) ELSE 0 END AS NRSN12TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN13' THEN (DURATION) ELSE 0 END AS NRSN13TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN14' THEN (DURATION) ELSE 0 END AS NRSN14TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN15' THEN (DURATION) ELSE 0 END AS NRSN15TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN16' THEN (DURATION) ELSE 0 END AS NRSN16TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN17' THEN (DURATION) ELSE 0 END AS NRSN17TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN18' THEN (DURATION) ELSE 0 END AS NRSN18TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN19' THEN (DURATION) ELSE 0 END AS NRSN19TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN20' THEN (DURATION) ELSE 0 END AS NRSN20TIME,
+            CASE WHEN MAPPING_NRSN = 'NRSN_ETC' THEN (DURATION) ELSE 0 END AS NRSNETCTIME,
+            CASE WHEN state_name = 'Unavailable' THEN (DURATION) else 0 END AS NOTREADY_TIME ,
+            CASE WHEN MAPPING_NRSN = 'Available' THEN (DURATION) else 0 END AS AVAIL_TIME,
+            duration as login_time
+            FROM
+            (SELECT
+            shai.INTERVAL_TIME_ZONE,
+            shai.AGENT_ID,
+            shai.company_id,
+            shai.tenant_id,
+            shai.center_id,
+            shai.team_id,
+            shai.part_id,
+            shai.agent_name,
+            shai.week,
+            shai.holi,
+            case when state_name = 'Unavailable' then IFNULL(un.MAPPING_NRSN, 'NRSN_ETC')
+            when  state_name = 'Available' then 'Available'
+            end  AS MAPPING_NRSN,
+            (shai.DURATION) AS DURATION,
+            state_name
+            FROM
+            STAT_H_AGT_STATE_I shai
+            LEFT OUTER JOIN U_NRSN un
+            ON un.COMPANY_ID = shai.COMPANY_ID
+            AND un.CTI_CODE = shai.OUTSTATEID
+            WHERE
+            shai.company_id = #{companyId}
+            AND ymd = #{ymd}
+            and shai.interval_time_zone > #{lastDateTime}
+            ) T
+            ) tt2
+        group by interval_time_zone,company_id,tenant_id,center_id,team_id,part_id,agent_id;
+    </insert>
+
+
+
+    <insert id="insertStatHAgentStateI" parameterType="com.ecstel.sym.utils.DataMap">
+
+        DELETE FROM STAT_H_AGT_STATE_I where ymd = #{ymd} and company_id = #{companyId} and INTERVAL_TIME_ZONE > #{lastDateTime};
+
+        INSERT
+        INTO
+            STAT_H_AGT_STATE_I
+        (
+            COMPANY_ID,
+            TIMESTAMP,
+            INTERVAL_TIME_ZONE,
+            LAST_UPDATE_TIME,
+            YMD,
+            YYYYMM,
+            YYYY,
+            MM,
+            DD,
+            HH24,
+            HH24MI,
+            WEEK,
+            HOLI,
+            TENANT_ID,
+            CENTER_ID,
+            TEAM_ID,
+            PART_ID,
+            AGENT_ID,
+            AGENT_NAME,
+            STATE_NAME,
+            DURATION,
+            OUTSTATEID,
+            OCCUR
+        )
+        select
+            t.company_id,
+            t.INTERVAL_TIME_ZONE,
+            t.INTERVAL_TIME_ZONE,
+            now(),
+            DATE_FORMAT(t.INTERVAL_TIME_ZONE, '%Y%m%d') ,
+            DATE_FORMAT(t.INTERVAL_TIME_ZONE, '%Y%m') ,
+            DATE_FORMAT(t.INTERVAL_TIME_ZONE, '%Y') ,
+            DATE_FORMAT(t.INTERVAL_TIME_ZONE, '%m') ,
+            DATE_FORMAT(t.INTERVAL_TIME_ZONE, '%d') ,
+            DATE_FORMAT(t.INTERVAL_TIME_ZONE, '%H') ,
+            DATE_FORMAT(t.INTERVAL_TIME_ZONE, '%H%i') ,
+            '1' ,
+            'N' ,
+            (	SELECT		TENANT_ID	FROM		ECP.ECP_AGENT	WHERE		COMPANY_ID = (t.COMPANY_ID)		AND CC_CTI_ID = t.AGENT_ID)    ,
+            (	SELECT		CENTER_ID	FROM		ECP.ECP_AGENT	WHERE		COMPANY_ID = (t.COMPANY_ID)			AND CC_CTI_ID = t.AGENT_ID)    ,
+            (	SELECT		TEAM_ID	FROM		ECP.ECP_AGENT	WHERE		COMPANY_ID = (t.COMPANY_ID)			AND CC_CTI_ID = t.AGENT_ID)    ,
+            (	SELECT		PART_ID	FROM		ECP.ECP_AGENT	WHERE		COMPANY_ID = (t.COMPANY_ID)			AND CC_CTI_ID = t.AGENT_ID)    ,
+            t.agent_id    ,
+            (	SELECT		NAME	FROM		ECP.ECP_AGENT	WHERE		COMPANY_ID = max(t.COMPANY_ID)			AND CC_CTI_ID = t.AGENT_ID)   ,
+            t.agentStateName,
+            sum(t.duration),
+            t.outStateId,
+            count(*)
+        from
+            (
+                select
+                    distinct e.COMPANY_ID,
+                             INTERVAL_TIME_ZONE,
+                             e.AGENT_ID ,
+                             agentStateName,
+                             duration as duration,
+                             outStateId
+                from
+                    E_AGT_STATE e
+                where
+                    e.ymd = #{ymd}
+                  and e.company_id = #{companyId}
+                  and e.INTERVAL_TIME_ZONE > #{lastDateTime}
+                  and e.duration is not null
+                order by
+                    INTERVAL_TIME_ZONE
+            ) t
+        where  1=1
+        group by
+            COMPANY_ID ,
+            INTERVAL_TIME_ZONE,
+            agent_id,
+            agentStateName,
+            agentStateName;
+    </insert>
+
+
+    <insert id="insertStatHAgtInbound" parameterType="com.ecstel.sym.utils.DataMap">
+
+        insert into stat_h_agt_inbound
+        (
+            timestamp
+        ,ymd
+        ,yyyymm
+        ,yyyy
+        ,mm
+        ,dd
+        ,hh24
+        ,hh24mi
+        ,week
+        ,holi
+        ,company_id
+        ,tenant_id
+        ,center_id
+        ,team_id
+        ,part_id
+        ,AGTID
+        ,agt_name
+        ,offer
+        ,ans
+        ,abd
+        ,talktime
+        ,acwtime
+        ,ringtime
+        ,holdtime
+        )
+        SELECT
+            INTERVAL_TIME_ZONE ,
+            DATE_FORMAT(INTERVAL_TIME_ZONE, '%Y%m%d'),
+            CONCAT(YEAR(INTERVAL_TIME_ZONE), LPAD(MONTH(INTERVAL_TIME_ZONE), 2, '0')),
+            YEAR(INTERVAL_TIME_ZONE),
+            LPAD(MONTH(INTERVAL_TIME_ZONE), 2, '0'),
+            LPAD(DAY(INTERVAL_TIME_ZONE), 2, '0'),
+            LPAD(HOUR(INTERVAL_TIME_ZONE), 2, '0'),
+            CONCAT(LPAD(HOUR(INTERVAL_TIME_ZONE), 2, '0'), LPAD(MINUTE(INTERVAL_TIME_ZONE), 2, '0')),
+            max(week) as week,
+            max(holi) as holi,
+            company_id,
+            tenant_id,
+            center_id,
+            team_id,
+            part_id,
+            AGENT_ID ,
+            agent_name,
+            sum(ans)+sum(abd) as OFFER,
+            sum(ans) as ANS,
+            sum(abd) as ABD,
+            sum(TALK_TIME) as TALK_TIME ,
+            sum(ACW_TIME) as ACW_TIME ,
+            sum(RING_TIME) as RING_TIME ,
+            sum(HOLD_TIME) as HOLD_TIME
+        from
+            C_INBOUND ci
+        where
+            company_id = #{companyId}
+          AND ymd = #{ymd}
+          AND INTERVAL_TIME_ZONE > #{lastDateTime}
+          and agent_id != '0'
+        group by
+            INTERVAL_TIME_ZONE ,
+            AGENT_ID
+    </insert>
+
+    <insert id="insertStatHAgtOutbound" parameterType="com.ecstel.sym.utils.DataMap">
+        insert into stat_h_agt_outbound
+        (
+            timestamp
+        ,ymd
+        ,yyyymm
+        ,yyyy
+        ,mm
+        ,dd
+        ,hh24
+        ,hh24mi
+        ,week
+        ,holi
+        ,company_id
+        ,tenant_id
+        ,center_id
+        ,team_id
+        ,part_id
+        ,agtid
+        ,agt_name
+        ,obtry
+        ,ans
+        ,abd
+        ,talktime
+        ,holdtime
+        )
+        select
+            interval_time_zone
+             ,ymd
+             ,yyyymm
+             ,yyyy
+             ,mm
+             ,dd
+             ,hh24
+             ,hh24mi
+             ,week
+             ,holi
+             ,company_id
+             ,tenant_id
+             ,center_id
+             ,team_id
+             ,part_id
+             ,agent_id
+             ,max(agent_name)
+             ,sum(ans+abd) as obextry
+             ,sum(ans) as ans
+             ,sum(abd) as abd
+             ,sum(talk_time) as obconntalktime
+             ,sum(hold_time) as holdtime
+        from (
+                 select
+                     INTERVAL_TIME_ZONE ,
+                     DATE_FORMAT(INTERVAL_TIME_ZONE, '%Y%m%d') as ymd,
+                     CONCAT(YEAR(INTERVAL_TIME_ZONE), LPAD(MONTH(INTERVAL_TIME_ZONE), 2, '0')) as yyyymm ,
+                     YEAR(INTERVAL_TIME_ZONE) as yyyy,
+                     LPAD(MONTH(INTERVAL_TIME_ZONE), 2, '0') as mm,
+                     LPAD(DAY(INTERVAL_TIME_ZONE), 2, '0') as dd,
+                     LPAD(HOUR(INTERVAL_TIME_ZONE), 2, '0') as hh24,
+                     CONCAT(LPAD(HOUR(INTERVAL_TIME_ZONE), 2, '0'), LPAD(MINUTE(INTERVAL_TIME_ZONE), 2, '0')) as hh24mi,
+                     (week) as week,
+                     (holi) as holi,
+                     company_id,
+                     tenant_id,
+                     center_id,
+                     team_id,
+                     part_id,
+                     AGENT_ID ,
+                     (agent_name) as agent_name,
+                     case when end_reason in ('Agent Hung Up','Contact Hung Up') then 1 else 0 end ans,
+                     case when end_reason not in ('Agent Hung Up','Contact Hung Up') then 1 else 0 end abd  ,
+                     case when end_reason in ('Agent Hung Up','Contact Hung Up') then talk_time else 0 end talk_time,
+                     hold_time
+                 from c_outbound where ymd = #{ymd} and company_id = #{companyId} and INTERVAL_TIME_ZONE > #{lastDateTime}
+             ) t
+        group by
+            INTERVAL_TIME_ZONE ,
+            company_id,
+            tenant_id,
+            center_id,
+            team_id,
+            part_id,
+            AGENT_ID
+    </insert>
+
+
+    <insert id="insertStatHServiceSummary" parameterType="com.ecstel.sym.utils.DataMap">
+
+        DELETE from ${targetTable} where ymd = #{ymd} and company_id = #{companyId};
+        INSERT INTO ${targetTable}(
+                                   ERSDBDATE
+                                  ,TIMESTAMP
+                                  ,YMD
+                                  ,YYYYMM
+                                  ,YYYY
+                                  ,MM
+                                  ,DD
+                                  ,HH24
+                                  ,HH24MI
+                                  ,WEEK
+                                  ,HOLI
+                                  ,IBGNAME
+                                  ,DEST_PHONE
+                                  ,OFFER
+                                  ,ANS
+                                  ,ABD
+                                  ,ABD_IVR
+                                  ,ANSDELAY
+                                  ,SVCLEVEL
+                                  ,ABDTIME
+                                  ,TALKTIME
+                                  ,HOLDTIME
+                                  ,ACWTIME
+                                  ,TRANS_IN_ANS
+                                  ,TRANS_IN_ABD
+                                  ,ANS_COBROWSING
+                                  ,COMPANY_ID
+                                  ,TENANT_ID
+                                  ,AVERAGEHANDLETIME
+                                  ,AVERAGEINQUEUETIME
+                                  ,AVERAGETALKTIME
+                                  ,AVERAGEWRAPTIME
+                                  ,CONTACTSACTIVE
+                                  ,CONTACTSHANDLED
+                                  ,CONTACTSOFFERED
+                                  ,CONTACTSQUEUED
+                                  ,CONTACTSOUTOFSLA
+                                  ,CONTACTSWITHINSLA
+                                  ,LONGESTQUEUEDUR
+                                  ,MEDIATYPEID
+                                  ,MEDIATYPENAME
+                                  ,QUEUECOUNT
+                                  ,DIALS
+                                  ,CONNECTS
+                                  ,CONNECTSAHT
+                                  ,ANSDELAY1
+                                  ,ANSDELAY2
+                                  ,ANSDELAY3
+                                  ,ANSDELAY4
+                                  ,ANSDELAY5
+                                  ,ABDDELAY1
+                                  ,ABDDELAY2
+                                  ,ABDDELAY3
+                                  ,ABDDELAY4
+                                  ,ABDDELAY5
+                                  ,ANSQUEUETIME
+                                  ,ABDQUEUETIME
+                                  ,IVRTIME
+                                  ,QUEUETIME
+        )
+        SELECT
+            now(),
+            ${timestamp} AS timestamp
+        ,MAX(YMD)
+        ,MAX(YYYYMM)
+        ,MAX(YYYY)
+        ,MAX(MM)
+        ,MAX(DD)
+        ,MAX(HH24)
+        ,${hh24mi}
+                ,MAX(WEEK)
+                ,MAX(HOLI)
+                ,IBGNAME
+                ,MAX(DEST_PHONE)
+                ,SUM(OFFER)
+                ,SUM(ANS)
+                ,SUM(ABD)
+                ,SUM(ABD_IVR)
+                ,SUM(ANSDELAY)
+                ,SUM(SVCLEVEL)
+                ,SUM(ABDTIME)
+                ,SUM(TALKTIME)
+                ,SUM(HOLDTIME)
+                ,SUM(ACWTIME)
+                ,SUM(TRANS_IN_ANS)
+                ,SUM(TRANS_IN_ABD)
+                ,SUM(ANS_COBROWSING)
+                ,COMPANY_ID
+                ,TENANT_ID
+                ,SUM(AVERAGEHANDLETIME)
+                ,SUM(AVERAGEINQUEUETIME)
+                ,SUM(AVERAGETALKTIME)
+                ,SUM(AVERAGEWRAPTIME)
+                ,SUM(CONTACTSACTIVE)
+                ,SUM(CONTACTSHANDLED)
+                ,SUM(CONTACTSOFFERED)
+                ,SUM(CONTACTSQUEUED)
+                ,SUM(CONTACTSOUTOFSLA)
+                ,SUM(CONTACTSWITHINSLA)
+                ,MAX(LONGESTQUEUEDUR)
+                ,MEDIATYPEID
+                ,MEDIATYPENAME
+                ,SUM(QUEUECOUNT)
+                ,SUM(DIALS)
+                ,SUM(CONNECTS)
+                ,SUM(CONNECTSAHT)
+                ,sum(ANSDELAY1)
+                ,sum(ANSDELAY2)
+                ,sum(ANSDELAY3)
+                ,sum(ANSDELAY4)
+                ,sum(ANSDELAY5)
+                ,sum(ABDDELAY1)
+                ,sum(ABDDELAY2)
+                ,sum(ABDDELAY3)
+                ,sum(ABDDELAY4)
+                ,sum(ABDDELAY5)
+                ,sum(ANSQUEUETIME)
+                ,sum(ABDQUEUETIME)
+                ,sum(IVRTIME)
+                ,sum(QUEUETIME)
+        FROM ${sourceTable}
+        WHERE YMD = #{ymd}
+        AND COMPANY_ID = #{companyId}
+        GROUP BY ${timestamp},IBGNAME,COMPANY_ID,TENANT_ID,MEDIATYPEID,MEDIATYPENAME;
+    </insert>
+
+
+    <insert id="insertStatHAgentSummary" parameterType="com.ecstel.sym.utils.DataMap">
+
+        DELETE from ${targetTable} where ymd = #{ymd} and company_id = #{companyId};
+
+        INSERT INTO ${targetTable}
+        (`TIMESTAMP`, YMD, YYYYMM, YYYY, MM, DD, HH24, HH24MI, WEEK, HOLI, COMPANY_ID, TENANT_ID, CENTER_ID, TEAM_ID, PART_ID, AGTID, AGT_NAME, TOT_OFFER, OFFER, TOT_ANS, ANS, ABD, OBTRY, OBCONN, LOGINTIME, READYTIME, RINGTIME, OBRINGTIME, TALKTIME, TALKTIME_IN, TALKTIME_OUT, ACWTIME, ACWTIME_IN, ACWTIME_OUT, NOTREADYTITME, HOLDTIME_IN, HOLDTIME_OUT, HOLDTIME, WORKTIME, CONSULT_TIME, DBDATE, NRSN1TIME, NRSN2TIME, NRSN3TIME, NRSN4TIME, NRSN5TIME, NRSN6TIME, NRSN7TIME, NRSN8TIME, NRSN9TIME, NRSN10TIME, NRSN11TIME, NRSN12TIME, NRSN13TIME, NRSN14TIME, NRSN15TIME, NRSN16TIME, NRSN17TIME, NRSN18TIME, NRSN19TIME, NRSN20TIME, NRSNETCTIME)
+        select
+            ${timestamp} ,
+            max(YMD),
+            max(YYYYMM),
+            max(YYYY),
+            max(MM),
+            max(DD),
+            max(HH24),
+            ${hh24mi},
+            max(WEEK),
+            max(HOLI),
+            COMPANY_ID,
+            TENANT_ID,
+            CENTER_ID,
+            TEAM_ID,
+            PART_ID,
+            AGTID,
+            max(AGT_NAME),
+            sum(TOT_OFFER),
+            sum(OFFER),
+            sum(TOT_ANS),
+            sum(ANS),
+            sum(ABD),
+            sum(OBTRY),
+            sum(OBCONN),
+            sum(LOGINTIME),
+            sum(READYTIME),
+            sum(RINGTIME),
+            sum(OBRINGTIME),
+            sum(TALKTIME),
+            sum(TALKTIME_IN),
+            sum(TALKTIME_OUT),
+            sum(ACWTIME),
+            sum(ACWTIME_IN),
+            sum(ACWTIME_OUT),
+            sum(NOTREADYTITME),
+            sum(HOLDTIME_IN),
+            sum(HOLDTIME_OUT),
+            sum(HOLDTIME),
+            sum(WORKTIME),
+            sum(CONSULT_TIME),
+            now(),
+            sum(NRSN1TIME),
+            sum(NRSN2TIME),
+            sum(NRSN3TIME),
+            sum(NRSN4TIME),
+            sum(NRSN5TIME),
+            sum(NRSN6TIME),
+            sum(NRSN7TIME),
+            sum(NRSN8TIME),
+            sum(NRSN9TIME),
+            sum(NRSN10TIME),
+            sum(NRSN11TIME),
+            sum(NRSN12TIME),
+            sum(NRSN13TIME),
+            sum(NRSN14TIME),
+            sum(NRSN15TIME),
+            sum(NRSN16TIME),
+            sum(NRSN17TIME),
+            sum(NRSN18TIME),
+            sum(NRSN19TIME),
+            sum(NRSN20TIME),
+            sum(NRSNETCTIME)
+        from
+            ${sourceTable}
+        WHERE YMD = #{ymd}
+          AND COMPANY_ID = #{companyId}
+            group by ${timestamp} ,company_id,tenant_id,center_id,team_id,part_id,agtid;
+    </insert>
+
+
+    <select id="getNrsnList" parameterType="com.ecstel.sym.utils.DataMap" resultType="com.ecstel.sym.utils.DataMap">
+        SELECT CTI_CODE,LABEL FROM U_NRSN WHERE COMPANY_ID = #{companyId}
+    </select>
+
+    <select id="getServiceList" parameterType="com.ecstel.sym.utils.DataMap" resultType="com.ecstel.sym.utils.DataMap">
+        SELECT CTI_CODE,LABEL FROM U_SERVICE WHERE COMPANY_ID = #{companyId}
+    </select>
+
+    <select id="getAgentList" parameterType="com.ecstel.sym.utils.DataMap" resultType="com.ecstel.sym.utils.DataMap">
+        select
+        ecp.company_id as companyId,
+        ecp.tenant_id as tenantId,
+        ecp.center_id as centerId,
+        ecp.team_id as teamId,
+        ecp.part_id as partId,
+        ecp.cc_cti_id as AGTID,
+        ecp.name as NAME,
+        ifnull(ANS,0) as ans,
+        ifnull(ABD,0) as ABD,
+        ifnull(OBTRY,0) as OBTRY,
+        ifnull(OBCONN,0) as OBCONN,
+        ifnull(LOGINTIME,0) as LOGINTIME,
+        ifnull(TALKTIME_IN,0) as TALKTIME_IN,
+        ifnull(TALKTIME_OUT,0) as TALKTIME_OUT,
+        ifnull(NOTREADYTITME,0) as NOTREADYTITME,
+        ifnull(ACWTIME,0) as ACWTIME,
+        ifnull(READYTIME,0) as READYTIME
+        from
+        ECP.ECP_AGENT ecp left outer join
+        STAT_H_AGT_D sh
+        on ecp.cc_cti_id = sh.agtid
+        and ecp.COMPANY_ID = sh.COMPANY_ID
+        and sh.ymd = DATE_FORMAT(CURDATE(), '%Y%m%d')
+        where
+        ecp.COMPANY_ID = #{list[0].companyId}
+        and ecp.cc_cti_id in ( <foreach collection="list" item="list" separator=",">
+        #{list.agentId}
+    </foreach> )
+    </select>
+
+    <select id="selectAgnetExists" parameterType="com.ecstel.sym.utils.DataMap" resultType="com.ecstel.sym.utils.DataMap">
+        WITH ExpectedValues AS (
+        <foreach collection="list" item="item" separator="UNION ALL">
+            select #{item.cctCtiId} AS CC_CTI_ID
+        </foreach>
+        )
+        SELECT e.CC_CTI_ID as agentId,
+        CASE
+        WHEN u.CC_CTI_ID IS NOT NULL THEN 'O'
+        ELSE 'X'
+        END AS ExistsFlag
+        FROM ExpectedValues e
+        LEFT JOIN ecp.ecp_agent u ON e.CC_CTI_ID = u.CC_CTI_ID;
+    </select>
+
+    <select id="selectBatchCheck" parameterType="com.ecstel.sym.utils.DataMap"
+            resultType="com.ecstel.sym.utils.DataMap">
+            select batch_name,status from u_batch_check where ymd = #{ymd} and batch_name = #{batchName};
+    </select>
+
+    <select id="selectHagentInboundData" parameterType="com.ecstel.sym.utils.DataMap"
+            resultType="com.ecstel.sym.utils.DataMap">
+        select
+            timestamp,
+            company_id
+                ,tenant_id
+                ,center_id
+                ,team_id
+                ,part_id
+                ,agtid
+                ,offer
+                ,ans
+                ,abd
+                ,talktime
+                ,acwtime
+                ,ringtime
+        from stat_h_agt_inbound
+        where company_id = #{companyId}
+          and timestamp > #{lastDateTime}
+          and ymd = #{ymd}
+    </select>
+
+    <select id="selectHagentOutboundData" parameterType="com.ecstel.sym.utils.DataMap"
+            resultType="com.ecstel.sym.utils.DataMap">
+        select timestamp,
+                company_id
+                ,tenant_id
+                ,center_id
+                ,team_id
+                ,part_id
+                ,agtid
+                ,obtry
+                ,ans
+                ,abd
+                ,talktime
+                ,holdtime
+        from stat_h_agt_outbound
+        where company_id = #{companyId}
+          and timestamp > #{lastDateTime}
+        and ymd = #{ymd}
+    </select>
+
+    <insert id="updateAgentServiceMap" parameterType="com.ecstel.sym.utils.DataMap">
+        delete from ecp.ECP_AGENT_SERVICE_MAP where company_id = #{list[0].companyId};
+        <foreach collection="list" item="item" separator=";">
+            INSERT INTO ECP.ECP_AGENT_SERVICE_MAP (
+            company_id,
+            AGENT_ID,
+            CC_CTI_ID,
+            `KEY`,
+            NAME,
+            PRIORITY,
+            REFERENCE_TABLE_COLUMN,
+            LAST_BATCHED_AT
+            )
+            VALUES (
+            #{item.companyId},
+            (SELECT ID FROM ECP.ECP_AGENT WHERE CC_CTI_ID = #{item.agentId} and COMPANY_ID = #{item.companyId}),
+            #{item.agentId},
+            #{item.skillId},
+            COALESCE((SELECT LABEL FROM U_SERVICE WHERE CTI_CODE = #{item.skillId} and company_id = #{item.companyId} LIMIT 1), #{item.skillName}),
+            #{item.priority},
+            'U_SERVICE.CTI_CODE',
+            NOW()
+            )
+        </foreach>
+    </insert>
+
+
+</mapper>

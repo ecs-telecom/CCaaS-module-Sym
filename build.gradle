@@ -1,0 +1,63 @@
+plugins {
+    id 'java'
+    id 'war'
+    id 'org.springframework.boot' version '3.0.12'
+    id 'io.spring.dependency-management' version '1.1.0'
+}
+
+group = 'com.ecstel'
+version = '0.0.1-SNAPSHOT'
+
+dependencies {
+
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.3.1'
+    implementation group: 'com.google.code.gson', name: 'gson', version: '2.10.1'
+    implementation group: 'org.mybatis.spring.boot', name: 'mybatis-spring-boot-starter', version: '2.3.1'
+    implementation 'org.mariadb.jdbc:mariadb-java-client:3.0.4'
+    implementation 'com.google.guava:guava:31.0.1-jre'
+    implementation group: 'net.sf.json-lib', name: 'json-lib', version: '2.4', classifier:"jdk15"
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
+    implementation group: 'org.apache.tika', name: 'tika-core', version: '2.3.0'
+    compileOnly 'org.projectlombok:lombok'
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+    annotationProcessor 'org.projectlombok:lombok'
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:2.3.1'
+    implementation group: 'org.bgee.log4jdbc-log4j2', name:'log4jdbc-log4j2-jdbc4.1', version: '1.16'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-batch:3.2.5' // Spring Boot Batch Starter
+    implementation 'org.springframework.boot:spring-boot-starter-quartz:3.2.5' // Spring Boot Quartz Starter
+    implementation 'javax.annotation:javax.annotation-api:1.3.2'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.13' // HttpClient 의존성
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.3' // Jackson 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+}
+
+
+java {
+    sourceCompatibility = '17'
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Javadoc) {
+    options.encoding = 'UTF-8'
+}
